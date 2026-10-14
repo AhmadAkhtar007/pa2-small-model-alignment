@@ -1,0 +1,10 @@
+{
+  "stage": "sft", "model": "Qwen/Qwen2.5-0.5B",
+  "train_path": "data/prepared/sft_train.json", "val_path": "data/prepared/sft_val.json",
+  "output_dir": "outputs/sft", "device": "cuda:0", "seed": 42,
+  "max_length": 512, "max_prompt_length": 256,
+  "batch_size": 2, "gradient_accumulation": 16, "learning_rate": 0.00002,
+  "weight_decay": 0.1, "warmup_ratio": 0.03, "scheduler": "cosine",
+  "epochs": 1, "gradient_clip": 1.0, "eval_steps": 100,
+  "gradient_checkpointing": true
+}

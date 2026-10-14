@@ -1,0 +1,4 @@
+# Tested API family; install separately from core to preserve Kaggle's torch.
+transformers>=4.46,<4.50
+trl==0.15.2
+peft==0.14.0

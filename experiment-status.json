@@ -1,0 +1,31 @@
+{
+  "sft": {
+    "completed": true,
+    "optimizer_steps": 938,
+    "best_validation_loss": 1.3736332449068704
+  },
+  "hh": {
+    "completed": true,
+    "optimizer_steps": 465,
+    "best_validation_reward_accuracy": 0.625
+  },
+  "uf": {
+    "completed": true,
+    "optimizer_steps": 465,
+    "best_validation_reward_accuracy": 0.689
+  },
+  "persona": {
+    "completed": false,
+    "job_version": 358223311
+  },
+  "generation": {
+    "completed": false
+  },
+  "judging": {
+    "completed": false
+  },
+  "report": {
+    "completed": false
+  },
+  "checkpoint_version": 358022133
+}

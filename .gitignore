@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+outputs/
+data/prepared/
+.pytest_cache/
+*.egg-info/
+.env
+.env.*
+kaggle.json
