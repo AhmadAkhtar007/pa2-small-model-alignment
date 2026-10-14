@@ -15,8 +15,9 @@
     "best_validation_reward_accuracy": 0.689
   },
   "persona": {
-    "completed": false,
-    "job_version": 358223311
+    "completed": true,
+    "job_version": 358223311,
+    "runtime_seconds": 640.0
   },
   "generation": {
     "completed": false
@@ -27,5 +28,20 @@
   "report": {
     "completed": false
   },
-  "checkpoint_version": 358022133
+  "checkpoint_version": 358022133,
+  "plots": {
+    "completed": true,
+    "saved_version": 358223311,
+    "stages": [
+      "sft",
+      "dpo_hh",
+      "dpo_uf",
+      "persona"
+    ]
+  },
+  "controlled_sanity": {
+    "completed": null,
+    "job_version": 358235518,
+    "verification": "Browser policy service unavailable; result not yet inspected"
+  }
 }
