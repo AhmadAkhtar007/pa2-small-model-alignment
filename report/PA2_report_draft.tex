@@ -1,0 +1,115 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amsmath,booktabs,tabularx,array,xcolor,hyperref,fancyhdr}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{PA2: Small-Model Alignment}
+\rhead{Ahmad Akhtar --- 28100155}
+\cfoot{\thepage}
+\newcommand{\pending}[1]{\textcolor{red!65!black}{\textbf{Pending verification:} #1}}
+\title{Instruction Tuning and Direct Preference Optimization\\on Small Language Models}
+\author{Ahmad Akhtar \quad 28100155}
+\date{14 October 2026}
+\begin{document}
+\maketitle
+\begin{center}\fcolorbox{red!65!black}{red!5}{\parbox{0.92\linewidth}{\textbf{Working draft --- not ready for submission.} Full generation, model judging, evaluation tables, and training figures must be incorporated before this report is finalized. All numerical results below are training results, not judged response-quality scores.}}\end{center}
+
+\section{Repository, models, and data}
+The implementation is stored at \url{https://github.com/AhmadAkhtar007/pa2-small-model-alignment}. It implements response-masked supervised fine-tuning (SFT), two manual Direct Preference Optimization (DPO) experiments, and a separate TRL/LoRA persona experiment. The repository and checkpoint sources are currently private; course reviewers require access before submission.
+
+The main model is \texttt{Qwen/Qwen2.5-0.5B}. SFT used the first user/assistant turn from UltraChat. Both manual DPO policies started independently from the same best SFT checkpoint. HH used strictly single-turn Anthropic HH-RLHF pairs, while the other run used UltraFeedback binarized pairs. Duplicate prompts were removed before seeded selection and splitting. Persona training used \texttt{HuggingFaceTB/SmolLM2-360M-Instruct} and the supplied Ramsay-style preferences.
+
+\begin{center}
+\begin{tabular}{lrrl}\toprule
+Experiment & Train & Validation & Source / evaluation set\\\midrule
+SFT & 30,000 & 1,000 & UltraChat\\
+HH DPO & 15,000 & 1,000 & HH-RLHF / 300 supplied HH prompts\\
+UF DPO & 15,000 & 1,000 & UltraFeedback / 300 AlpacaEval prompts\\
+Persona LoRA & 198 & 22 & 220 supplied preferences / 12 prompts\\\bottomrule
+\end{tabular}
+\end{center}
+All splits use seed 42. Preparation checks confirmed unique prompts and no train/validation prompt overlap within each main training track. The AlpacaEval subset contains 300 fixed prompts with seed 42. The exact prepared subsets, dataset fingerprints, and file hashes are retained in the saved training artifacts.
+
+\section{Experimental configuration}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{lXXXX}\toprule
+Setting & SFT & HH DPO & UF DPO & Persona LoRA\\\midrule
+Trainable strategy & Full & Full & Full & LoRA\\
+Optimizer & AdamW & AdamW & AdamW & AdamW\\
+Learning rate & $2\times10^{-5}$ & $10^{-6}$ & $10^{-6}$ & $5\times10^{-5}$\\
+Schedule / warmup & Cosine / 3\% & Constant / 0 & Constant / 0 & Cosine / 3\%\\
+Weight decay & 0.1 & 0 & 0 & 0\\
+Microbatch / accumulation & 2 / 16 & 1 / 32 & 1 / 32 & 1 / 8\\
+Effective batch & 32 & 32 & 32 & 8\\
+Epochs & 1 & 1 & 1 & 3\\
+Gradient clip & 1.0 & 1.0 & 1.0 & 1.0\\
+Context / prompt cap & 512 / 256 & 512 / 256 & 512 / 256 & 512 / 256\\
+DPO $\beta$ & --- & 0.1 & 0.1 & 0.1\\
+Reference & --- & SFT best & SFT best & Frozen instruct base\\\bottomrule
+\end{tabularx}
+\end{center}
+Manual training uses FP32 trainable weights, FP16 autocast, gradient scaling, and gradient checkpointing. For each manual DPO experiment, the policy occupies GPU 0 and the frozen FP16 reference occupies GPU 1. The two experiments ran sequentially using Kaggle T4 $\times2$. Persona training uses GPU 0 with TRL 0.15.2 and PEFT 0.14.0. Its LoRA settings are rank 8, alpha 16, dropout 0, no bias adaptation, and targets \texttt{q\_proj}, \texttt{k\_proj}, \texttt{v\_proj}, and \texttt{o\_proj}.
+
+\section{Implementation and parameter choices}
+Manual SFT and DPO use custom PyTorch loops; TRL's DPOTrainer is used only for persona tuning. Padding and prompt positions are excluded from response scoring. An EOS token is appended before truncation. SFT minimizes the negative response log probability averaged across scored tokens. Accumulation groups are normalized by the total scored-token count, including the final partial group.
+
+For DPO, let $s_\theta(x,y)$ denote the sum of response-token log probabilities. The batch objective averages
+\[
+ -\log\sigma\left(\beta\left[
+ s_\theta(x,y_w)-s_\theta(x,y_l)-s_{\mathrm{ref}}(x,y_w)+s_{\mathrm{ref}}(x,y_l)
+ \right]\right).
+\]
+The reference is frozen and evaluated without gradients. Validation preference accuracy uses the strict comparison between the chosen and rejected implicit rewards. Best DPO checkpoints are selected by this accuracy; best SFT is selected by validation loss.
+
+The shared Qwen prompt is \texttt{\#\#\# Instruction:} followed by the instruction, two newlines, and \texttt{\#\#\# Response:}. Formatted prompts retain their last 256 tokens. This cap was also applied to SFT and evaluation for consistency, although it can remove context from long instructions. Persona generation uses the instruct tokenizer's chat template.
+
+The manual DPO learning rate, beta, epoch count, and effective batch size follow the guide recipe. AdamW is one of the allowed DPO optimizers. LoRA settings limit trainable capacity on the small preference set; they were not established as optimal through a parameter sweep. Zero dropout avoids introducing stochastic differences in preference scoring.
+
+The initial greedy sanity outputs contained repeated phrases and several answers reached the 256-token generation cap. A second sanity run was launched with repetition penalty 1.1 and a no-repeat trigram constraint for every model. \pending{inspect that run before selecting final decoding settings and producing all evaluation outputs.} The intended final generation keeps greedy decoding, one beam, seed 42, and a maximum of 256 new tokens. The same settings must be used for both sides of each comparison.
+
+\section{Training behavior and selected checkpoints}
+\begin{center}
+\begin{tabular}{lrl}\toprule
+Run & Successful optimizer updates & Best validation result\\\midrule
+SFT & 938 & Response-token loss: 1.373633\\
+HH DPO & 465 & Preference accuracy: 62.5\%\\
+UF DPO & 465 & Preference accuracy: 68.9\%\\
+Persona LoRA & Not yet extracted & Completed saved run; adapter retained\\\bottomrule
+\end{tabular}
+\end{center}
+The SFT validation loss decreased from 1.423867 at step 100 to 1.373633 at step 938, after a small increase at step 200. The final step gave the lowest recorded validation loss. HH and UF best checkpoint scores come from the persisted completion summary, not a model judge. The two manual DPO runs each consumed the complete 15,000-pair training subset. Successful update counts differ from the nominal accumulation-group count because gradient-scaler overflow skips do not increment the successful-update counter.
+
+HH was resumed from a durable step-100 checkpoint, restoring weights, optimizer, scheduler, scaler, random states, and the batch cursor. Older copied log entries are not additional successful training. The completed DPO batch ran successfully in 32,759.9 seconds (about 9.1 hours), longer than the manual's estimate. Persona training, plotting, and initial sanity generation completed in a separate saved run of 640 seconds. Those durations include the respective jobs' setup and ancillary work.
+
+Plots for all four stages were generated in saved persona version 358223311. \pending{download and visually inspect these plots; include readable training/validation-loss and DPO preference-diagnostic figures here. Extract the persona Trainer state, adapter selection, and actual update count before finalizing its results.}
+
+\section{DPO-versus-SFT and persona evaluation}
+\pending{full response generation and judging have not yet been completed or verified. No win rates are available.}
+
+The planned HH comparison uses the same 300 supplied synthetic helpful/harmless prompts for SFT and HH DPO. UF uses the same fixed 300-prompt AlpacaEval subset for SFT and UF DPO. Persona compares the unadapted SmolLM2 instruct model with the selected adapter on 12 supplied prompts. These targets are different and will be reported separately.
+
+Pair construction shuffles response positions with seed 42 while retaining the model mapping outside the judge-facing prompt. The judge receives only the instruction and Response A/B. Judging uses saved response files, five pairs per request, at least five seconds between attempts, three attempts per failed batch, and persisted judgments for resume. The configured judge is \texttt{google/gemini-3.6-flash}; availability must be verified in the Kaggle benchmark environment before use. Any replacement must be recorded.
+
+For counts $W,L,T$, decisive win rate is $W/(W+L)$ and ties-half win rate is $(W+T/2)/(W+L+T)$. Unknowns and unresolved failures are excluded from those denominators and separately reported against the full set. Persona summaries additionally assess style, usefulness, and safety. \pending{insert measured counts, both win rates, judge identity, failures/retries, and representative comparisons.}
+
+\section{Interpretation, error analysis, and limitations}
+Initial sanity responses establish a limitation rather than a quality improvement. Both SFT and HH DPO sometimes supplied harmful assistance after a superficial disclaimer. Qwen responses showed repetitive completions and misunderstandings of some prompts. Persona responses were often close to the unadapted instruct baseline; the initial three samples did not establish strong persona fidelity. Some cooking responses omitted important safety checks or contained dubious advice. These observations are based on a few samples and must not be presented as aggregate evaluation results.
+
+A higher preference-validation accuracy does not by itself establish better responses, safer behavior, or a higher judged win rate. The final analysis must distinguish observations from explanations such as dataset mismatch, limited model capacity, insufficient style steering, or decoding effects. One seed, small evaluation sets, a synthetic HH benchmark, judge bias, prompt truncation, and failed interactive sessions limit interpretation. Saved batch runs removed dependence on editor inactivity, but do not guarantee infrastructure cannot fail.
+
+\section{Reproducibility and artifact access}
+The repository provides \texttt{submission\_adapter.py}, custom objectives and training code, configurations, prepared-data instructions, tests, saved-stage batch scripts, and stage provenance. The earlier Kaggle project suite reported 31 passing tests. A fresh public-adapter verification is included in the full-generation job but has not yet executed; the local bundled Python did not have pytest installed.
+
+Full model weights are deliberately excluded from the small source repository and submission archive. Saved DPO version 358022133 contains best/final models and SHA256 records; persona version 358223311 contains the adapter, plots, and sample responses. Links are listed in \texttt{ARTIFACTS.md}. Final response metadata, pair files, judgments, summaries, test logs, and plots must be added to the repository after evaluation. Reviewer permissions must be resolved before submission.
+
+\begin{thebibliography}{9}
+\bibitem{dpo} Rafailov et al. \emph{Direct Preference Optimization: Your Language Model is Secretly a Reward Model}. NeurIPS, 2023.
+\bibitem{manual} Course Staff. \emph{Instruction Tuning and Direct Preference Optimization on a Small Language Model}, PA2 assignment manual.
+\bibitem{torch} PyTorch documentation. Automatic mixed precision examples. \url{https://docs.pytorch.org/docs/stable/notes/amp_examples.html}.
+\bibitem{trl} Hugging Face. TRL 0.15.2 DPOTrainer documentation. \url{https://huggingface.co/docs/trl/v0.15.2/dpo_trainer}.
+\bibitem{peft} Hugging Face. PEFT LoRA documentation. \url{https://huggingface.co/docs/peft/main/en/package_reference/lora}.
+\end{thebibliography}
+\end{document}
