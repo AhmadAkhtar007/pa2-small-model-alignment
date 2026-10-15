@@ -14,11 +14,9 @@
 \begin{document}
 \maketitle
 \vspace{-1.2em}
-\textbf{Main finding.} On 300 synthetic helpful/harmless prompts, HH DPO won 168 comparisons against SFT and lost 95. On 300 AlpacaEval prompts, UF DPO won 95 and lost 138. Persona LoRA tied its instruct baseline overall: four wins, four losses, and four ties. These are relative model-judge preferences, not guarantees of correctness or safety.
-
 \section{Repository, models, and data}
 Repository: \url{https://github.com/AhmadAkhtar007/pa2-small-model-alignment}.
-The implementation provides manual response-masked SFT and DPO loops, the required root submission adapter, configurations, tests, fixed evaluation files, and reproducible stage scripts. The main base checkpoint is \texttt{Qwen/Qwen2.5-0.5B}; the persona model is \texttt{HuggingFaceTB/SmolLM2-360M-Instruct}.
+The main experiments start from \texttt{Qwen/Qwen2.5-0.5B}; the persona experiment uses \texttt{HuggingFaceTB/SmolLM2-360M-Instruct}. The repository contains the custom SFT and DPO loops, the root submission adapter, tests, configurations, fixed evaluation sets, and scripts for running each stage.
 
 \begin{center}\small
 \begin{tabular}{lrrl}\toprule
@@ -28,7 +26,7 @@ HH DPO / HH-RLHF & 15,000 & 1,000 & 300 supplied synthetic HH prompts\\
 UF DPO / UltraFeedback & 15,000 & 1,000 & 300 fixed AlpacaEval prompts\\
 Persona LoRA & 198 & 22 & 12 supplied persona prompts\\\bottomrule
 \end{tabular}\end{center}
-UltraChat uses the first user/assistant turn. Main preference datasets are filtered to strictly single-turn pairs. Duplicate prompts are removed before seeded selection and splitting. Preparation verified prompt uniqueness and no train/validation overlap within each main track. All random splits and the fixed AlpacaEval subset use seed 42. Prepared-data fingerprints and SHA256 hashes are retained in the saved training artifacts. The persona split uses the supplied 220 preferences. Evaluation files and generation metadata are included in the repository results.
+For UltraChat, each example uses the first user message and assistant response. HH and UltraFeedback pairs are restricted to single-turn conversations. Duplicate prompts are removed before sampling and splitting, and checks confirmed that each main track has unique prompts with no train/validation overlap. All random splits and the fixed AlpacaEval subset use seed 42. The persona experiment splits the supplied 220 preferences into 198 training and 22 validation pairs. Saved training outputs retain the prepared-data fingerprints and SHA256 hashes; the repository includes the evaluation files and generation metadata.
 
 \section{Experimental configuration}
 \begin{center}\small
@@ -47,20 +45,22 @@ Sequence / prompt cap & 512 / 256 & 512 / 256 & 512 / 256 & 512 / 256\\
 DPO $\beta$ & --- & 0.1 & 0.1 & 0.1\\
 Reference & --- & SFT best & SFT best & Frozen instruct base\\\bottomrule
 \end{tabularx}\end{center}
-Gradient clipping is 1.0 throughout. Manual training uses FP32 trainable weights with FP16 autocast, gradient scaling, and gradient checkpointing. Each DPO run places its policy on GPU 0 and frozen FP16 reference on GPU 1, on Kaggle T4 $\times2$. HH and UF are independent experiments initialized from the same best SFT checkpoint; they ran sequentially. Persona uses TRL 0.15.2 and PEFT 0.14.0, with rank 8, alpha 16, dropout 0, no adapted bias, and targets \texttt{q\_proj}, \texttt{k\_proj}, \texttt{v\_proj}, and \texttt{o\_proj}. Its reference is the base model with the trainable adapter disabled.
+All runs use gradient clipping at 1.0. The custom loops keep trainable weights in FP32 and use FP16 autocast, gradient scaling, and gradient checkpointing. On Kaggle T4 $\times2$, each DPO run puts the policy on GPU 0 and the frozen FP16 reference on GPU 1. HH and UF ran sequentially, each starting independently from the same best SFT checkpoint. The persona run uses TRL 0.15.2 and PEFT 0.14.0. Its LoRA settings are rank 8, alpha 16, dropout 0, no adapted bias, and target modules \texttt{q\_proj}, \texttt{k\_proj}, \texttt{v\_proj}, and \texttt{o\_proj}. Disabling the trainable adapter gives the frozen base-model reference.
 
 \section{Implementation and parameter choices}
-Padding and prompt tokens are excluded from response scoring. EOS is appended before truncation. SFT minimizes response-token negative log likelihood, normalized by all scored tokens in an accumulation group, including a partial final group. DPO uses summed response log probabilities $s_\theta(x,y)$ and minimizes the pair-average objective
+The loss scores only response tokens: prompt and padding tokens are masked out, and EOS is appended before truncation. SFT divides the total response-token negative log likelihood by the number of scored tokens in each accumulation group, including the final partial group. DPO sums response log probabilities $s_\theta(x,y)$ and averages the following objective over pairs:
 \[
 -\log\sigma\!\left(\beta\left[s_\theta(x,y_w)-s_\theta(x,y_l)-s_{\rm ref}(x,y_w)+s_{\rm ref}(x,y_l)\right]\right).
 \]
-Reference computations run without gradients. Validation preference accuracy compares chosen and rejected implicit rewards using a strict inequality. Best SFT selection minimizes validation token loss; best DPO selection maximizes validation preference accuracy. The main objectives and loops are custom PyTorch implementations; TRL's DPOTrainer is used only for persona tuning.
+The reference model runs without gradients. A validation pair counts as correct only when the chosen response has a strictly higher implicit reward than the rejected response. SFT checkpoint selection uses the lowest validation token loss; DPO selection uses the highest validation preference accuracy. These objectives and training loops are implemented in PyTorch. Only the persona experiment uses TRL's DPOTrainer.
 
-Qwen consistently uses \texttt{\#\#\# Instruction:} and \texttt{\#\#\# Response:}, separated by the specified newlines. The formatted prompt retains its last 256 tokens, including in SFT and evaluation; this can discard information in long instructions. SmolLM2 uses its instruct chat template. AdamW, main DPO learning rate, beta, and effective batch follow the permitted guide recipe. Persona capacity is limited by LoRA; no parameter sweep established its settings as optimal.
+Qwen uses the template \verb|### Instruction:\n{instruction}\n\n### Response:\n|, where \verb|\n| denotes a newline. SFT and evaluation both retain the last 256 tokens of the formatted prompt, which can discard part of a long instruction. SmolLM2 uses its instruct chat template. The main DPO runs follow the guide's AdamW option, learning rate, beta, and effective batch size.
 
-\textbf{Choices and deviations.} Code initially reached Kaggle as a Google Drive ZIP rather than a Git clone, deviating from the setup instructions. The final source is versioned on GitHub. Base generation ran after training, using the untouched base checkpoint. Initial interactive-session loss required replacement training; only the preserved replacement SFT is reported here. HH resumed from a saved step-100 checkpoint with optimizer, scaler, scheduler, RNG states, and batch cursor restored. The report distinguishes configured persona epochs (3) from the Trainer's actual final epoch (2.889; 72 updates).
+For persona tuning, rank 8 keeps the adapter small. Adapting the attention query, key, value, and output projections allows style changes while the base weights remain frozen. The learning rate of $5\times10^{-5}$ and three configured epochs were initial settings for the 198 training pairs; no tuning sweep was run. A microbatch of 1 limits memory use, with eight-step accumulation giving an effective batch of 8. The model loads in FP32 and trains with FP16 mixed precision; BF16 is disabled. Validation preference accuracy reached 100\% on 22 pairs, while held-out style scores showed no improvement.
 
-Initial greedy outputs repeated phrases. A second check inspected three prompts for each of seven model/set combinations before full generation. Final decoding is greedy, one beam, seed 42, 256 maximum new tokens, repetition penalty 1.1, and no-repeat trigram size 3. Temperature, top-p, and length penalty retain 1.0. These deterministic anti-repetition controls are allowed by the manual and identical on both sides of every comparison. They reduce repetition but do not repair the observed safety and instruction-following errors.
+Source was transferred to Kaggle through a Google Drive ZIP and is versioned on GitHub. Base responses were generated after training from the untouched base checkpoint. The persona run completed 72 updates; its final Trainer state records epoch 2.889, with three epochs configured.
+
+Initial greedy outputs repeated phrases, so final decoding uses a repetition penalty of 1.1 and no-repeat trigram size 3. Before generating the full sets, three responses were inspected for each of seven model/set combinations. All comparisons use the same settings on both sides: greedy decoding, one beam, seed 42, and a maximum of 256 new tokens. Temperature, top-p, and length penalty remain at 1.0.
 
 \section{Training behavior and checkpoint selection}
 \begin{center}\small
@@ -71,13 +71,13 @@ HH DPO & 465 & 400 & Preference accuracy 62.5\%\\
 UF DPO & 465 & 465 & Preference accuracy 68.9\%\\
 Persona LoRA & 72 & 25 & Preference accuracy 100\% on 22 pairs\\\bottomrule
 \end{tabular}\end{center}
-SFT's lowest recorded validation loss occurs at its final checkpoint. HH validation DPO loss falls from approximately 0.693 to 0.651 at update 400, then rises slightly; preference accuracy similarly peaks at 400 before decreasing. UF reaches validation loss 0.585609 at its final selected update. Reward margins increase in both DPO runs, showing stronger separation relative to the reference. Noisy training losses and limited validation gains show that preference optimization is not uniform progress on every batch.
+SFT reaches its lowest recorded validation loss at the final checkpoint. For HH, validation DPO loss falls from about 0.693 to 0.651 at update 400, then rises slightly. Preference accuracy also peaks at 400, which selects that checkpoint. UF reaches validation loss 0.585609 at its final update. Both DPO runs have increasing reward margins, so the policy separates chosen and rejected responses more strongly relative to the reference. Training losses fluctuate, and validation gains remain limited.
 
-Both manual DPO runs consumed their complete 15,000-pair subsets. Successful update counts exclude gradient-scaler overflow skips. Persona's small validation set saturates at 100\% preference accuracy; the early best checkpoint does not establish style generalization. The later judge evaluation confirms weak style fidelity. Plots use the saved raw metrics without smoothing; dashed lines identify selected DPO/persona checkpoints. Original full-size plots are also included separately.
+Both custom DPO runs process their full 15,000-pair subsets. The reported update counts exclude steps skipped by the gradient scaler because of overflow. Persona reaches 100\% preference accuracy on its 22 validation pairs, but the later style evaluation remains weak. This gap limits what can be concluded from the early best checkpoint. All plots use raw saved metrics without smoothing. Dashed lines mark the selected DPO and persona checkpoints; the original full-size plots are included separately.
 
 \begin{figure}[p]\centering
 \includegraphics[width=\linewidth]{figures/sft_report.png}
-\caption{Replacement SFT training and validation response-token losses.}
+\caption{SFT training and validation response-token losses.}
 \vspace{1em}
 \includegraphics[width=\linewidth]{figures/persona_report.png}
 \caption{Persona LoRA loss and validation preference accuracy. Dashed line: selected update 25. The final Trainer state records 72 updates and epoch 2.889.}
@@ -93,7 +93,7 @@ Both manual DPO runs consumed their complete 15,000-pair subsets. Successful upd
 
 \clearpage
 \section{DPO-versus-SFT and persona evaluation}
-Full generation produced 1,524 nonempty responses: base/SFT/UF on AlpacaEval, SFT/HH on the supplied HH set, and base/adapted SmolLM2 on the persona set. Local checks verified counts, unique IDs, pair mappings, and every judgment's pair hash. Judge-facing prompts hide model identities; response positions are randomized with seed 42. The judge is Kaggle's \texttt{google/gemini-3.6-flash}, called from a separate utility benchmark notebook.
+Generation produced 1,524 nonempty responses: base/SFT/UF on AlpacaEval, SFT/HH on the supplied HH set, and base/adapted SmolLM2 on the persona set. Checks verified the response counts, unique IDs, pair mappings, and each judgment's pair hash. The judge sees only Response A and Response B, with positions randomized using seed 42. A separate Kaggle utility benchmark notebook calls \texttt{google/gemini-3.6-flash} to judge the saved pairs.
 
 \begin{center}\small
 \begin{tabular}{lrrrrrr}\toprule
@@ -102,9 +102,9 @@ HH DPO vs SFT & 300 & 168 & 95 & 37 & 63.88\% & 62.17\%\\
 UF DPO vs SFT & 300 & 95 & 138 & 67 & 40.77\% & 42.83\%\\
 Persona LoRA vs instruct & 12 & 4 & 4 & 4 & 50.00\% & 50.00\%\\\bottomrule
 \end{tabular}\end{center}
-Decisive WR is $W/(W+L)$; ties-half WR is $(W+T/2)/(W+L+T)$. Final unknown, unresolved-failure, and pending counts are zero in all three sets. HH has a 73-comparison net win advantage; UF has a 43-comparison net loss. These tasks are different, so their results are not pooled into a headline score.
+Decisive WR is $W/(W+L)$; ties-half WR is $(W+T/2)/(W+L+T)$. All three sets have zero final unknowns, unresolved failures, or pending comparisons. HH has 73 more wins than losses; UF has 43 more losses than wins. Scores are reported separately because the evaluation tasks differ.
 
-The first judging run used five pairs per request, at least five seconds between attempts, up to three attempts, and persisted results after every successful batch. HH and UF successful batches required five and four additional request attempts, respectively. One five-pair persona batch returned non-JSON responses on all three attempts. A second saved run retained the seven valid persona judgments and retried only the five failures individually with the same judge and rubric. All five succeeded. Original failure/attempt logs and retry raw responses are retained; no failed comparison was silently dropped.
+Judging ran in batches of five pairs, with at least five seconds between attempts and up to three attempts per batch. Results were saved after each successful batch. HH needed five additional request attempts and UF needed four. Five persona comparisons still had invalid JSON after three attempts; retrying them individually with the same judge and rubric resolved all five. The seven existing judgments were retained, along with attempt logs and raw retry responses.
 
 \begin{center}\small
 \begin{tabular}{lrrr}\toprule
@@ -112,21 +112,26 @@ Persona model ($N=12$) & Style / 5 & Usefulness / 5 & Judged safe\\\midrule
 Unadapted SmolLM2 instruct & 1.33 & 1.75 & 10/12\\
 Persona LoRA & 1.17 & 1.75 & 10/12\\\bottomrule
 \end{tabular}\end{center}
-The adapter did not demonstrate improved persona fidelity or aggregate usefulness. Low absolute ratings matter more than a misleading improvement claim from the initially incomplete seven-prompt result. The safety column records the judge's binary assessment on this tiny set, not a deployment safety certification.
+The adapter did not improve aggregate persona fidelity or usefulness. Safety scores were unchanged at 10/12 for both models.
 
 \section{Interpretation and error analysis}
-\textbf{HH improvements and failures.} On \texttt{hh-eval-42-0002} (satellite imagery), HH DPO gives a clearer school-level explanation; SFT includes a contradictory description about visibility from Earth. On \texttt{hh-eval-42-0004}, both refuse harassment, but HH is judged more concise. However, on \texttt{hh-eval-42-0001}, HH provides harmful assistance despite a disclaimer and loses to a nonsensical SFT answer that is less actionable. Even a win on \texttt{hh-eval-42-0000} reflects greater coherence while both answers fail refusal. Thus HH's relative win rate must not be described as a refusal-success rate.
+\textbf{HH.} Falling validation loss and a rising reward margin show that HH learned to favor chosen responses over rejected ones. The selected step-400 checkpoint reached 62.5\% validation preference accuracy, then won 168 comparisons and lost 95 against SFT on the synthetic HH set. Some winning responses are clearer and shorter. HH explains satellite imagery more clearly on \texttt{hh-eval-42-0002}; on \texttt{hh-eval-42-0004}, both models refuse harassment, but HH is more concise. Safety is still inconsistent. HH gives harmful assistance on \texttt{hh-eval-42-0001}, and both models fail to refuse on \texttt{hh-eval-42-0000}. The 63.88\% decisive win rate therefore measures the judge's overall preference, including clarity, rather than the proportion of safe refusals.
 
-\textbf{UF regressions and occasional gains.} On \texttt{alpaca-42-0002}, SFT better adopts a sports commentator's voice; UF mixes incompatible sports details. On \texttt{alpaca-42-0003}, UF better maintains a Mars-colonist persona while SFT breaks character. On \texttt{alpaca-42-0000}, both misinterpret an idiom; UF wins by avoiding one particularly poor literal suggestion. Such wins can be comparisons between two weak responses. Higher UF validation preference accuracy therefore does not imply better instruction-following on the held-out AlpacaEval distribution.
+\textbf{UF.} UF reached validation DPO loss 0.585609 and preference accuracy 68.9\%, better numerical values than HH's. Yet it lost 138 AlpacaEval comparisons against SFT and won 95. Each model was validated on its own preference dataset, so those validation scores cannot directly compare general usefulness. On \texttt{alpaca-42-0002}, SFT follows the sports-commentator instruction more closely while UF mixes incompatible sports details. UF's validation gains did not prevent this instruction-following error. It maintains character more consistently on \texttt{alpaca-42-0003}, while both models misinterpret an idiom on \texttt{alpaca-42-0000}. Overall, its 40.77\% decisive win rate shows weaker judged performance than SFT on this AlpacaEval subset.
 
-\textbf{Persona.} The adapter and baseline often produce similarly bland, truncated, or incorrect answers. The cooking examples contain factual mistakes, and the judge's style scores remain close to the minimum. At \texttt{persona-03}, the answers are identical, illustrating limited behavioral change. The selected adapter's perfect small preference-validation score is compatible with poor style generalization.
+\textbf{Persona.} The adapter and baseline often give similarly bland, truncated, or incorrect answers. Cooking examples contain factual mistakes, and style scores remain close to the minimum. The answers to \texttt{persona-03} are identical. Although the selected adapter scores perfectly on the small preference-validation set, that result does not carry over to the held-out style prompts.
 
-Possible contributors include limited model capacity, train/evaluation distribution differences, prompt truncation, and weak transfer from a small style-preference set. These are hypotheses, not isolated causal findings: there was no controlled hyperparameter or decoding ablation. Limitations include one seed, a synthetic HH test set, only 12 persona prompts, a single judge, position randomization without reversed-position repeats, 256-token cutoffs, and subjective rubric interpretation. Inspection of judgments also reveals occasional debatable reasoning; model-judge preferences are not ground truth.
+Both main DPO runs started from the same SFT checkpoint and used beta 0.1, the same learning rate, and a one-epoch budget. Decoding was matched within each comparison. Both learned their training preferences, but only HH improved judged performance on its evaluation set. The examples suggest that HH's clarity gains helped on the synthetic HH prompts, while UF's learned preferences transferred less well to AlpacaEval instructions. This is a possible explanation, with dataset choice and evaluation task changing together. A direct HH-versus-UF ranking would require testing both on the same set. The training curves alone do not establish overfitting, and the examples do not measure how frequent each behavior is.
 
-\section{Reproducibility and artifact access}
-The repository includes source, actual configs, metrics, original and report figures, fixed generated responses, blinded pair files with external mappings, final judgments, historical failures, and generation metadata with prompt/weight hashes. The earlier Kaggle project suite reported 31 passing tests; this is not a claim that the final private checker or a fresh local GPU suite was run. Final artifact validation independently recomputed judged summaries, checked all pair hashes, and verified archive integrity.
+\clearpage
+\section{Limitations and reproducibility}
+All comparisons use one judge, Gemini 3.6 Flash, whose decisions may favor a response's position, length, or formatting. Response order was randomized, but pairs were not judged again with positions reversed. Human assessment could therefore produce different results. Each main evaluation has 300 prompts; the HH set is synthetic, and persona evaluation has only 12 prompts. These sizes limit how broadly the results apply. Training and subset selection use only seed 42, so the experiments do not measure variation across seeds.
 
-Saved Kaggle versions: training 358022133; persona/plots 358223311; generation 358554825; full judging 358601648; persona retry 358676439. The full judging job completed in 2,073.7 seconds and the retry in 82.8 seconds. Full model weights remain in saved Kaggle training outputs and are excluded from the compact submission. Kaggle outputs remain private unless access is separately granted; public report/results and reproduction scripts are in GitHub. \texttt{ARTIFACTS.md} lists exact links. Evidence-file hashes are in \path{results/SHA256SUMS.txt}.
+The experiments ran on Kaggle T4 $\times2$ with 512-token sequences, a 256-token prompt cap, and at most 256 generated tokens. These limits can remove context or cut answers short. The compute budget covered one epoch per main track and three configured persona epochs, without multi-seed runs or hyperparameter and decoding ablations. SFT was rerun after an interactive session expired; all reported SFT results come from the preserved completed run. Invalid judge responses were retried as described in Section 5, leaving zero unresolved comparisons.
+
+\begin{sloppypar}
+Configurations are in \path{configs/}, with training metrics and plots in \path{results/training/}. Generated responses, pair mappings, and judgments are in \path{results/evaluation/}. Aggregate scores are saved in \path{results/evaluation-summary.json}, with attempt and failure records in \path{results/judging-history/}. The repository includes the fixed evaluation outputs and judgments, with hashes in \path{results/SHA256SUMS.txt}. For saved notebook versions and checkpoint locations, see \path{ARTIFACTS.md}. Reusing the full weights requires access to the private saved Kaggle outputs.
+\end{sloppypar}
 
 \begingroup\footnotesize
 \setlength{\parskip}{0pt}
