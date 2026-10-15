@@ -94,6 +94,8 @@ python scripts/plot_metrics.py --run-dir outputs/persona
 
 The six function signatures are unchanged and call `alignment/core.py`.
 
+The final repository passed all **7 public adapter smoke tests** on CPU. See the [test output](results/public-adapter-tests.txt) and [environment record](results/public-adapter-tests.json). This verifies the public checklist requirement; private staff checks remain separate.
+
 Run the public tests from the repository root:
 
 ```bash

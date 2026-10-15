@@ -9,5 +9,5 @@
   "report_pages": 6,
   "report_visually_reviewed": true,
   "python_and_template_notebook_syntax": "passed",
-  "test_scope": "31-test historical Kaggle suite reported passed. Fresh adapter test attempt in benchmark environment could not run because pytest is absent; no fresh test pass is claimed."
+  "test_scope": "Final repository public adapter smoke suite: 7 passed on CPU; see results/public-adapter-tests.txt and results/public-adapter-tests.json. Historical full Kaggle suite: 31 passed. Private staff checks have not been run."
 }

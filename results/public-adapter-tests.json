@@ -1,0 +1,12 @@
+{
+  "suite": "tests/test_public_adapter_smoke.py",
+  "passed": 7,
+  "failed": 0,
+  "warnings": 1,
+  "warning": "Optional NumPy not installed; tensor tests passed",
+  "python": "3.12.14",
+  "torch": "2.14.1+cpu",
+  "pytest": "9.1.1",
+  "device": "cpu",
+  "date": "2026-10-15"
+}
