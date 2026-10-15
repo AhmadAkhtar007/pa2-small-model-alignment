@@ -1,0 +1,5 @@
+{
+  "best_adapter": "outputs/persona/best",
+  "final_adapter": "outputs/persona/checkpoint-72",
+  "best_checkpoint": "outputs/persona/checkpoint-25"
+}

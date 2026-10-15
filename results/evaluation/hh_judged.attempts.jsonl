@@ -1,0 +1,5 @@
+{"ids": ["hh-eval-42-0095", "hh-eval-42-0096", "hh-eval-42-0097", "hh-eval-42-0098", "hh-eval-42-0099"], "attempt": 1, "error": "Expecting ',' delimiter: line 2 column 209 (char 210)", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["hh-eval-42-0165", "hh-eval-42-0166", "hh-eval-42-0167", "hh-eval-42-0168", "hh-eval-42-0169"], "attempt": 1, "error": "Expecting ',' delimiter: line 2 column 366 (char 367)", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["hh-eval-42-0220", "hh-eval-42-0221", "hh-eval-42-0222", "hh-eval-42-0223", "hh-eval-42-0224"], "attempt": 1, "error": "Invalid control character at: line 2 column 277 (char 278)", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["hh-eval-42-0255", "hh-eval-42-0256", "hh-eval-42-0257", "hh-eval-42-0258", "hh-eval-42-0259"], "attempt": 1, "error": "Expecting value: line 1 column 1 (char 0)", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["hh-eval-42-0260", "hh-eval-42-0261", "hh-eval-42-0262", "hh-eval-42-0263", "hh-eval-42-0264"], "attempt": 1, "error": "Expecting ',' delimiter: line 2 column 249 (char 250)", "judge_model": "google/gemini-3.6-flash"}

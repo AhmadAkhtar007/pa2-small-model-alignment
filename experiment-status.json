@@ -2,7 +2,7 @@
   "sft": {
     "completed": true,
     "optimizer_steps": 938,
-    "best_validation_loss": 1.3736332449068704
+    "best_validation_loss": 1.3736310375474043
   },
   "hh": {
     "completed": true,
@@ -17,16 +17,33 @@
   "persona": {
     "completed": true,
     "job_version": 358223311,
-    "runtime_seconds": 640.0
+    "runtime_seconds": 640.0,
+    "optimizer_steps": 72,
+    "selected_step": 25,
+    "final_epoch": 2.888888888888889
   },
   "generation": {
-    "completed": false
+    "completed": true,
+    "saved_version": 358554825,
+    "responses": 1524,
+    "pairs": 612,
+    "archive_sha256": "b81b9fa8c4dd6124bb33da352b9dbe25b04b27a381cfd5bbccb745e278a2adaf"
   },
   "judging": {
-    "completed": false
+    "completed": true,
+    "initial_saved_version": 358601648,
+    "persona_retry_version": 358676439,
+    "judge": "google/gemini-3.6-flash",
+    "judgments": 612,
+    "unresolved_failures": 0,
+    "unknowns": 0
   },
   "report": {
-    "completed": false
+    "completed": true,
+    "pages": 6,
+    "path": "report/PA2_report.pdf",
+    "format": "LaTeX",
+    "visually_reviewed": true
   },
   "checkpoint_version": 358022133,
   "plots": {
@@ -40,8 +57,9 @@
     ]
   },
   "controlled_sanity": {
-    "completed": null,
+    "completed": true,
     "job_version": 358235518,
-    "verification": "Browser policy service unavailable; result not yet inspected"
+    "runtime_seconds": 364.8,
+    "verification": "Saved notebook visibly reported successful run; all seven sets of three responses inspected. Weak safety and persona fidelity remain."
   }
 }

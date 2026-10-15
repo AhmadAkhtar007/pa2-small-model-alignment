@@ -1,0 +1,26 @@
+{
+  "model": "/kaggle/input/notebooks/ahmadakhtar007/pa2-dpo-saved-batch/small-model-alignment/outputs/sft/best",
+  "adapter": null,
+  "prompts": "/kaggle/input/notebooks/ahmadakhtar007/pa2-dpo-saved-batch/small-model-alignment/data/prepared/alpaca_eval.json",
+  "output": "/kaggle/working/evaluation-1792043466820053153/outputs/final_eval/sft_alpaca.json",
+  "generator": "sft",
+  "device": "cuda:1",
+  "max_new_tokens": 256,
+  "max_prompt_length": 256,
+  "repetition_penalty": 1.1,
+  "no_repeat_ngram_size": 3,
+  "seed": 42,
+  "chat_template": false,
+  "limit": null,
+  "do_sample": false,
+  "num_beams": 1,
+  "temperature": 1.0,
+  "top_p": 1.0,
+  "length_penalty": 1.0,
+  "prompt_sha256": "ff0abe7d3c9ae6a78fa002349e5ed78cfbd5e8bf66fbc1ab566781c46adffce4",
+  "eos_token_id": 151643,
+  "model_revision": null,
+  "local_weight_sha256": {
+    "/kaggle/input/notebooks/ahmadakhtar007/pa2-dpo-saved-batch/small-model-alignment/outputs/sft/best/model.safetensors": "62db43d974c0682d29c87aef3709766f6dfe59fd8add4afa0448ef0a3fecb57e"
+  }
+}

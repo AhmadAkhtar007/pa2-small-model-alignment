@@ -2,7 +2,15 @@
 
 Implementation of the PA2 assignment on top of the [course starter](https://github.com/ahmad903501/small-model-alignment-starter).
 
-**Status:** SFT and both full manual DPO runs completed on Kaggle T4 x2. Persona, evaluation, and the final report are in progress. See `experiment-status.json` and `ARTIFACTS.md` for verified stage status and saved checkpoint links. Earlier verification included 31 tests; this snapshot has not yet been freshly retested.
+**Completed experiments:** SFT, HH DPO, UF DPO, persona LoRA, 1,524 evaluation answers, and all 612 model judgments. Final unresolved failures and unknowns: zero. See the [LaTeX report](report/PA2_report.pdf), [evaluation summary](results/evaluation-summary.json), and [saved-artifact links](ARTIFACTS.md). The earlier Kaggle suite reported 31 passing tests; final evidence validation independently recomputed summaries and verified pair hashes.
+
+| Candidate vs baseline | Wins | Losses | Ties | Win rate, ties counted half |
+|---|---:|---:|---:|---:|
+| HH DPO vs SFT | 168 | 95 | 37 | 62.17% |
+| UF DPO vs SFT | 95 | 138 | 67 | 42.83% |
+| Persona LoRA vs instruct base | 4 | 4 | 4 | 50.00% |
+
+HH improved relative judge preference, UF regressed, and the persona adapter showed weak style fidelity. These scores do not establish that outputs are correct or safe. Full weights are excluded; saved Kaggle checkpoint links are retained separately. The report and `results/` provide the small reviewable deliverables.
 
 ## What is included
 
@@ -24,13 +32,13 @@ eval_sets/                    Fixed HH and persona evaluation prompts
 
 ## Run on Kaggle
 
-1. Upload `small-model-alignment.zip` as a private Kaggle dataset.
+1. Clone this repository in Kaggle: `git clone https://github.com/AhmadAkhtar007/pa2-small-model-alignment.git`. The submitted runs originally used a Google Drive ZIP; that workflow deviation is disclosed in the report.
 2. Import `notebooks/01_training.ipynb`, attach the project dataset, enable internet, and select **GPU T4 x2**. Save a notebook version after each completed stage.
 3. Import `notebooks/02_generation.ipynb`, attach the project and saved training outputs, and enable a GPU. Inspect the three sanity responses per model before full generation. Save a notebook version.
 4. Create a **utility benchmark** notebook from `notebooks/03_evaluation.ipynb`, attach the project and saved generation outputs, and enable supported model access. The judge setting is `google/gemini-3.6-flash`; choose another supported judge if unavailable and record it.
 5. Preserve plots, actual configurations, generations and metadata, pairs, judgments, failures, and summaries. Write the report from real results using `docs/REPORT_GUIDE.md`.
 
-The notebooks include setup and handoff instructions. They have not been executed top-to-bottom on Kaggle. Publishing to GitHub is optional for running the packaged notebooks, but the assignment submission requires your completed repository URL.
+The three numbered notebooks are generic workflow templates and were not executed top-to-bottom. Actual saved-stage orchestration and recovery helpers are in `notebooks/saved_batches/`; exact saved run versions are linked in `ARTIFACTS.md`. Generation uses two workers, one per GPU. Judging uses five-pair batches, then individual retries only for five failed persona pairs. The generation helper additionally includes a public-adapter preflight for future reruns; it was not part of the submitted generation run.
 
 ## Local verification
 

@@ -1,0 +1,5 @@
+{"id": "persona-05", "error": "Expecting value: line 1 column 1 (char 0)", "attempts": 3, "pair_sha256": "3b70749843eee0e47702870501ecbcf041554da0a27c32cc976a781842a835e0", "judge_model": "google/gemini-3.6-flash"}
+{"id": "persona-06", "error": "Expecting value: line 1 column 1 (char 0)", "attempts": 3, "pair_sha256": "3f0b4ac3723dce68c4c993dffd3b6b3d01b55671a027227e60495be3c229e0be", "judge_model": "google/gemini-3.6-flash"}
+{"id": "persona-07", "error": "Expecting value: line 1 column 1 (char 0)", "attempts": 3, "pair_sha256": "6cfb8d3485ff1a37f75f873a1be95694a9ba27da65a2de9cc118a0714b2e5334", "judge_model": "google/gemini-3.6-flash"}
+{"id": "persona-08", "error": "Expecting value: line 1 column 1 (char 0)", "attempts": 3, "pair_sha256": "a9972d188db8f0df871211441a606364e2e704bff73f6ca83d97fd5a58eafb76", "judge_model": "google/gemini-3.6-flash"}
+{"id": "persona-09", "error": "Expecting value: line 1 column 1 (char 0)", "attempts": 3, "pair_sha256": "b479377c0df99e8b6176e87b859c538b5ca64561eb14c95026600c284d7da224", "judge_model": "google/gemini-3.6-flash"}

@@ -1,0 +1,19 @@
+{
+  "candidate": "dpo-hh",
+  "sample_count": 300,
+  "wins": 168,
+  "losses": 95,
+  "ties": 37,
+  "unknown": 0,
+  "failures": 0,
+  "pending": 0,
+  "win_rate_excluding_ties": 0.6387832699619772,
+  "win_rate_ties_half": 0.6216666666666667,
+  "tie_rate": 0.12333333333333334,
+  "unknown_rate": 0.0,
+  "failure_rate": 0.0,
+  "judges": [
+    "google/gemini-3.6-flash"
+  ],
+  "retries_in_successful_batches_per_pair": 25
+}

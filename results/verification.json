@@ -1,0 +1,13 @@
+{
+  "generation_answers": 1524,
+  "final_judgments": 612,
+  "pair_hashes_checked": true,
+  "summaries_recalculated": true,
+  "seven_original_persona_judgments_preserved": true,
+  "unknowns": 0,
+  "unresolved_failures": 0,
+  "report_pages": 6,
+  "report_visually_reviewed": true,
+  "python_and_template_notebook_syntax": "passed",
+  "test_scope": "31-test historical Kaggle suite reported passed. Fresh adapter test attempt in benchmark environment could not run because pytest is absent; no fresh test pass is claimed."
+}

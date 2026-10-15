@@ -1,0 +1,4 @@
+track,sample_count,wins,losses,ties,unknown,failures,win_rate_excluding_ties,win_rate_ties_half
+hh,300,168,95,37,0,0,0.6387832699619772,0.6216666666666667
+uf,300,95,138,67,0,0,0.40772532188841204,0.42833333333333334
+persona,12,4,4,4,0,0,0.5,0.5

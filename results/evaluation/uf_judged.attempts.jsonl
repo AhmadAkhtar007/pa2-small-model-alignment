@@ -1,0 +1,4 @@
+{"ids": ["alpaca-42-0035", "alpaca-42-0036", "alpaca-42-0037", "alpaca-42-0038", "alpaca-42-0039"], "attempt": 1, "error": "Judge returned missing, duplicate, or unexpected IDs", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["alpaca-42-0070", "alpaca-42-0071", "alpaca-42-0072", "alpaca-42-0073", "alpaca-42-0074"], "attempt": 1, "error": "Judge returned missing, duplicate, or unexpected IDs", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["alpaca-42-0190", "alpaca-42-0191", "alpaca-42-0192", "alpaca-42-0193", "alpaca-42-0194"], "attempt": 1, "error": "Expecting ',' delimiter: line 4 column 3 (char 420)", "judge_model": "google/gemini-3.6-flash"}
+{"ids": ["alpaca-42-0200", "alpaca-42-0201", "alpaca-42-0202", "alpaca-42-0203", "alpaca-42-0204"], "attempt": 1, "error": "Expecting ',' delimiter: line 4 column 3 (char 650)", "judge_model": "google/gemini-3.6-flash"}

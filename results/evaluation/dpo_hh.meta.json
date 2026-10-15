@@ -1,0 +1,26 @@
+{
+  "model": "/kaggle/input/notebooks/ahmadakhtar007/pa2-dpo-saved-batch/small-model-alignment/outputs/dpo_hh/best",
+  "adapter": null,
+  "prompts": "/kaggle/working/evaluation-1792043466820053153/eval_sets/hh_rlhf_eval_300_seed42.json",
+  "output": "/kaggle/working/evaluation-1792043466820053153/outputs/final_eval/dpo_hh.json",
+  "generator": "dpo-hh",
+  "device": "cuda:1",
+  "max_new_tokens": 256,
+  "max_prompt_length": 256,
+  "repetition_penalty": 1.1,
+  "no_repeat_ngram_size": 3,
+  "seed": 42,
+  "chat_template": false,
+  "limit": null,
+  "do_sample": false,
+  "num_beams": 1,
+  "temperature": 1.0,
+  "top_p": 1.0,
+  "length_penalty": 1.0,
+  "prompt_sha256": "295ed7428937a3e8c611bd13c4aa85084d5dc1d7890e2faf057767aa28dd8042",
+  "eos_token_id": 151643,
+  "model_revision": null,
+  "local_weight_sha256": {
+    "/kaggle/input/notebooks/ahmadakhtar007/pa2-dpo-saved-batch/small-model-alignment/outputs/dpo_hh/best/model.safetensors": "fbb03f98cf79b416b7c1a5bce4ff852b2984b78996eb46d5a9edb8c761669b2c"
+  }
+}

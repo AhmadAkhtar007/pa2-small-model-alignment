@@ -1,0 +1,19 @@
+{
+  "candidate": "dpo-uf",
+  "sample_count": 300,
+  "wins": 95,
+  "losses": 138,
+  "ties": 67,
+  "unknown": 0,
+  "failures": 0,
+  "pending": 0,
+  "win_rate_excluding_ties": 0.40772532188841204,
+  "win_rate_ties_half": 0.42833333333333334,
+  "tie_rate": 0.22333333333333333,
+  "unknown_rate": 0.0,
+  "failure_rate": 0.0,
+  "judges": [
+    "google/gemini-3.6-flash"
+  ],
+  "retries_in_successful_batches_per_pair": 20
+}

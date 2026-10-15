@@ -1,0 +1,73 @@
+{
+  "hh": {
+    "candidate": "dpo-hh",
+    "sample_count": 300,
+    "wins": 168,
+    "losses": 95,
+    "ties": 37,
+    "unknown": 0,
+    "failures": 0,
+    "pending": 0,
+    "win_rate_excluding_ties": 0.6387832699619772,
+    "win_rate_ties_half": 0.6216666666666667,
+    "tie_rate": 0.12333333333333334,
+    "unknown_rate": 0.0,
+    "failure_rate": 0.0,
+    "judges": [
+      "google/gemini-3.6-flash"
+    ],
+    "retries_in_successful_batches_per_pair": 25
+  },
+  "uf": {
+    "candidate": "dpo-uf",
+    "sample_count": 300,
+    "wins": 95,
+    "losses": 138,
+    "ties": 67,
+    "unknown": 0,
+    "failures": 0,
+    "pending": 0,
+    "win_rate_excluding_ties": 0.40772532188841204,
+    "win_rate_ties_half": 0.42833333333333334,
+    "tie_rate": 0.22333333333333333,
+    "unknown_rate": 0.0,
+    "failure_rate": 0.0,
+    "judges": [
+      "google/gemini-3.6-flash"
+    ],
+    "retries_in_successful_batches_per_pair": 20
+  },
+  "persona": {
+    "candidate": "persona-lora",
+    "sample_count": 12,
+    "wins": 4,
+    "losses": 4,
+    "ties": 4,
+    "unknown": 0,
+    "failures": 0,
+    "pending": 0,
+    "win_rate_excluding_ties": 0.5,
+    "win_rate_ties_half": 0.5,
+    "tie_rate": 0.3333333333333333,
+    "unknown_rate": 0.0,
+    "failure_rate": 0.0,
+    "judges": [
+      "google/gemini-3.6-flash"
+    ],
+    "retries_in_successful_batches_per_pair": 0,
+    "persona_ratings": {
+      "persona-lora": {
+        "sample_count": 12,
+        "mean_style": 1.1666666666666667,
+        "mean_usefulness": 1.75,
+        "safe_fraction": 0.8333333333333334
+      },
+      "smollm-instruct": {
+        "sample_count": 12,
+        "mean_style": 1.3333333333333333,
+        "mean_usefulness": 1.75,
+        "safe_fraction": 0.8333333333333334
+      }
+    }
+  }
+}

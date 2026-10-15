@@ -7,3 +7,6 @@ data/prepared/
 .env
 .env.*
 kaggle.json
+report/*.log
+report/*.aux
+report/*.out

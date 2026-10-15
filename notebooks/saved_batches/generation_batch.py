@@ -1,6 +1,9 @@
 from pathlib import Path
 from importlib.metadata import version
-import os, sys, json, shutil, subprocess
+import os, sys, json, shutil, subprocess, time
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue, Empty
+from zipfile import ZipFile, ZIP_DEFLATED
 
 WORK = Path('/kaggle/working')
 SANITY_ONLY = False
@@ -8,7 +11,7 @@ dpo_sources = [p.parent / 'small-model-alignment' for p in Path('/kaggle/input')
 persona_sources = [p.parent / 'small-model-alignment' for p in Path('/kaggle/input').rglob('persona-sanity-complete.json')]
 assert len(dpo_sources) == len(persona_sources) == 1
 DPO, PERSONA = dpo_sources[0], persona_sources[0]
-REPO = WORK / 'small-model-alignment'
+REPO = WORK / f'evaluation-{time.time_ns()}'
 shutil.copytree(PERSONA, REPO, ignore=shutil.ignore_patterns('__pycache__', '.git'))
 os.chdir(REPO)
 env = os.environ.copy()
@@ -37,12 +40,17 @@ jobs = [
     ('smollm-instruct', 'HuggingFaceTB/SmolLM2-360M-Instruct', REPO / 'eval_sets/persona_eval_seed42.json', 'persona_base', ['--chat-template']),
     ('persona-lora', 'HuggingFaceTB/SmolLM2-360M-Instruct', REPO / 'eval_sets/persona_eval_seed42.json', 'persona_lora', ['--chat-template', '--adapter', REPO / 'outputs/persona/best']),
 ]
-for label, model, prompts, filename, extra in jobs:
+pending = Queue()
+for job in jobs:
+    pending.put(job)
+
+def generate_job(job, device):
+    label, model, prompts, filename, extra = job
     print('Generating full evaluation subset:', filename, flush=True)
     suffix = '_controlled_sanity' if SANITY_ONLY else ''
-    path = REPO / f'outputs/eval/{filename}{suffix}.json'
+    path = REPO / f'outputs/final_eval/{filename}{suffix}.json'
     run('scripts/generate.py', '--model', model, '--prompts', prompts, '--output', path, '--generator', label,
-        '--repetition-penalty', '1.1', '--no-repeat-ngram-size', '3',
+        '--device', f'cuda:{device}', '--repetition-penalty', '1.1', '--no-repeat-ngram-size', '3',
         *(['--limit', '3'] if SANITY_ONLY else []), *extra)
     rows = json.loads(path.read_text())
     expected = json.loads(Path(prompts).read_text())
@@ -53,12 +61,32 @@ for label, model, prompts, filename, extra in jobs:
     assert len(rows) == len(expected)
     assert {r['id'] for r in rows} == {str(r['id']) for r in expected}
 
+def worker(device):
+    while True:
+        try:
+            job = pending.get_nowait()
+        except Empty:
+            return
+        generate_job(job, device)
+
+with ThreadPoolExecutor(max_workers=2) as pool:
+    futures = [pool.submit(worker, device) for device in range(2)]
+    for future in futures:
+        future.result()
+
 if SANITY_ONLY:
     (WORK / 'controlled-sanity-complete.json').write_text(json.dumps({'models': len(jobs), 'repetition_penalty': 1.1, 'no_repeat_ngram_size': 3}, indent=2))
     print('Controlled sanity responses saved. Inspect before full generation.', flush=True)
     sys.exit(0)
 
 for baseline, candidate, name in [('sft_alpaca', 'dpo_uf', 'uf_pairs'), ('sft_hh', 'dpo_hh', 'hh_pairs'), ('persona_base', 'persona_lora', 'persona_pairs')]:
-    run('scripts/build_pairs.py', '--baseline', f'outputs/eval/{baseline}.json', '--candidate', f'outputs/eval/{candidate}.json', '--output', f'outputs/eval/{name}.jsonl')
-(WORK / 'generation-complete.json').write_text(json.dumps({'models': len(jobs), 'hh_pairs': 300, 'uf_pairs': 300, 'persona_pairs': 12}, indent=2))
+    run('scripts/build_pairs.py', '--baseline', f'outputs/final_eval/{baseline}.json', '--candidate', f'outputs/final_eval/{candidate}.json', '--output', f'outputs/final_eval/{name}.jsonl')
+(WORK / 'generation-complete.json').write_text(json.dumps({'project': REPO.name, 'models': len(jobs), 'responses': 1524, 'response_directory': 'outputs/final_eval', 'hh_pairs': 300, 'uf_pairs': 300, 'persona_pairs': 12}, indent=2))
 print('FULL GENERATION AND BLIND PAIRS COMPLETE. Save outputs before judging.', flush=True)
+with ZipFile(WORK / 'report-artifacts.zip', 'w', ZIP_DEFLATED) as archive:
+    for path in (REPO / 'outputs').rglob('*'):
+        if path.is_file() and path.suffix in {'.json', '.jsonl', '.png', '.csv'}:
+            archive.write(path, path.relative_to(REPO))
+    archive.write(WORK / 'generation-complete.json', 'generation-complete.json')
+    archive.write(WORK / 'public-adapter-tests.log', 'public-adapter-tests.log')
+print('Compact report artifacts saved.', flush=True)

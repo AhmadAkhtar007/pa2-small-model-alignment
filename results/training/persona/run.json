@@ -1,0 +1,26 @@
+{
+  "config": {
+    "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+    "data_path": "data/persona_lora/ramsay_style_preferences.json",
+    "output_dir": "outputs/persona",
+    "seed": 42,
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.0,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "learning_rate": 5e-05,
+    "batch_size": 1,
+    "gradient_accumulation": 8,
+    "epochs": 3,
+    "beta": 0.1
+  },
+  "dataset_sha256": "e1ceb0e49fd25c1adb9fef1862123d9b9d0f82fab8966c9406341117e3675a2a",
+  "train_size": 198,
+  "validation_size": 22,
+  "reference": "Frozen base model obtained by disabling the trainable LoRA adapter"
+}

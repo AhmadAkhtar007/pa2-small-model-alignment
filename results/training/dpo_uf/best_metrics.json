@@ -1,0 +1,6 @@
+{
+  "step": 465,
+  "validation_loss": 0.5856086996393278,
+  "reward_accuracy": 0.689,
+  "reward_margin": 0.5006395053572487
+}

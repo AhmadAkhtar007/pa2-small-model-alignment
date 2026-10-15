@@ -1,0 +1,28 @@
+{
+  "config": {
+    "stage": "dpo",
+    "model": "outputs/sft/best",
+    "reference_model": "outputs/sft/best",
+    "train_path": "data/prepared/hh_train.json",
+    "val_path": "data/prepared/hh_val.json",
+    "output_dir": "outputs/dpo_hh",
+    "device": "cuda:0",
+    "reference_device": "cuda:1",
+    "seed": 42,
+    "max_length": 512,
+    "max_prompt_length": 256,
+    "batch_size": 1,
+    "gradient_accumulation": 32,
+    "learning_rate": 1e-06,
+    "weight_decay": 0.0,
+    "warmup_ratio": 0.0,
+    "scheduler": "constant",
+    "epochs": 1,
+    "gradient_clip": 1.0,
+    "eval_steps": 100,
+    "beta": 0.1,
+    "gradient_checkpointing": true
+  },
+  "train_sha256": "f5d4a924f6007e859d8af18b85c03e5323a841fcc08d14f53c745d58e814677f",
+  "val_sha256": "5164589f1e0f332e7dab758716910467c8c70270c7bd246274cebd15bf9f9fbb"
+}
