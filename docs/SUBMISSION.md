@@ -8,7 +8,7 @@
 - Historical retries/failures: `results/judging-history/`.
 - Required grading interface: root `submission_adapter.py`.
 - Configurations and implementation: `configs/`, `alignment/`, `scripts/`, and `tests/`.
-- Saved stage versions and full-weight locations: `ARTIFACTS.md`.
+- Saved stage versions and full-weight locations: `docs/ARTIFACTS.md`.
 - Evidence integrity: `results/SHA256SUMS.txt`.
 
 Submit the repository URL and final report PDF using the course submission form. If plots and summary are requested as separate uploads, use the paths above. Do not upload the 10 GB model checkpoint bundle. This package does not itself constitute a submission to the course platform.

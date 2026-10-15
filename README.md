@@ -2,7 +2,20 @@
 
 Implementation of the PA2 assignment on top of the [course starter](https://github.com/ahmad903501/small-model-alignment-starter).
 
-**Completed experiments:** SFT, HH DPO, UF DPO, persona LoRA, 1,524 evaluation answers, and all 612 model judgments. Final unresolved failures and unknowns: zero. See the [LaTeX report](report/PA2_report.pdf), [evaluation summary](results/evaluation-summary.json), and [saved-artifact links](ARTIFACTS.md). The earlier Kaggle suite reported 31 passing tests; final evidence validation independently recomputed summaries and verified pair hashes.
+## Submission guide
+
+| What to review | Location |
+|---|---|
+| Final report (6 pages) | [PDF](report/PA2_report.pdf) |
+| SFT and DPO training plots | [Training results](results/training/) |
+| DPO-versus-SFT evaluation | [Summary](results/evaluation-summary.csv) |
+| Required grading interface | [submission_adapter.py](submission_adapter.py) |
+| Submission checklist | [Submission contents](docs/SUBMISSION.md) |
+| Saved Kaggle runs and checkpoints | [Artifact links](docs/ARTIFACTS.md) |
+
+The repository is organized by purpose: `report/` contains the report and its figures, `results/` contains the experiment evidence, and `docs/` contains supporting documentation. Implementation is in `alignment/` and `scripts/`, with settings in `configs/`, workflows in `notebooks/`, and checks in `tests/`. Provided training data and fixed evaluation prompts are in `data/` and `eval_sets/`. Large model weights are retained in saved Kaggle outputs.
+
+**Completed experiments:** SFT, HH DPO, UF DPO, persona LoRA, 1,524 evaluation answers, and all 612 model judgments. Final unresolved failures and unknowns: zero. See the [LaTeX report](report/PA2_report.pdf), [evaluation summary](results/evaluation-summary.json), and [saved-artifact links](docs/ARTIFACTS.md). The earlier Kaggle suite reported 31 passing tests; final evidence validation independently recomputed summaries and verified pair hashes.
 
 | Candidate vs baseline | Wins | Losses | Ties | Win rate, ties counted half |
 |---|---:|---:|---:|---:|
